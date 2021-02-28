@@ -1,0 +1,50 @@
+Vagrant.configure("2") do |config|
+    config.vm.box = "ubuntu/focal64"
+    config.vm.provider "virtualbox" do |vb|
+        vb.memory = 2048
+        vb.cpus = 2
+        vb.gui = true
+    end 
+    config.vm.define "master" do |dk1|
+        dk1.vm.provider "virtualbox" do |vb| 
+            vb.name= "master"
+            vb.memory = 2048
+            vb.cpus = 2 
+        end
+        dk1.vm.network "private_network", ip: "192.168.1.21"
+        dk1.vm.network "public_network"
+        dk1.vm.network "forwarded_port", guest: 80, host: 8080, protocol: "tcp"
+        dk1.vm.provision "shell", inline: "apt-get update"
+        dk1.vm.provision "shell", inline: "apt-get install -y docker.io"
+        dk1.vm.provision "shell", inline: "usermod -aG docker vagrant"
+        dk1.vm.hostname = "master"
+    end
+    config.vm.define "node1" do |dk2|
+        dk2.vm.provider "virtualbox" do |vb| 
+            vb.name= "node2"
+            vb.memory = 2048
+            vb.cpus = 2 
+        end
+        dk2.vm.network "private_network", ip: "192.168.1.22"
+        dk2.vm.network "public_network"
+        dk2.vm.network "forwarded_port", guest: 80, host: 8080, protocol: "tcp"
+        dk2.vm.provision "shell", inline: "apt-get update"
+        dk2.vm.provision "shell", inline: "apt-get install -y docker.io"
+        dk2.vm.provision "shell", inline: "usermod -aG docker vagrant"
+        dk2.vm.hostname = "node2"
+    end
+    config.vm.define "node3" do |dk3|
+        dk3.vm.provider "virtualbox" do |vb| 
+            vb.name= "node3"
+            vb.memory = 2048
+            vb.cpus = 2 
+        end
+        dk3.vm.network "private_network", ip: "192.168.1.23"
+        dk3.vm.network "public_network"
+        dk3.vm.network "forwarded_port", guest: 80, host: 8080, protocol: "tcp"
+        dk3.vm.provision "shell", inline: "apt-get update"
+        dk3.vm.provision "shell", inline: "apt-get install -y docker.io"
+        dk3.vm.provision "shell", inline: "usermod -aG docker vagrant"
+        dk3.vm.hostname = "node3"
+    end
+end
