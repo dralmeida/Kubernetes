@@ -3,11 +3,11 @@ Vagrant.configure("2") do |config|
     config.vm.define "master" do |master|
         master.vm.network "public_network", ip: "192.168.1.26"
         master.vm.provision "shell",
-          inline: "echo "ip_vs 
-                  ip_vs_rr
-                  ip_vs_sh
-                  ip_vs_wrr
-                  nf_conntrack_ipv4" /etc/modules-load.d/k8s.conf"
+          inline: "echo ip_vs 
+                    ip_vs_rr
+                    ip_vs_sh
+                    ip_vs_wrr
+                    nf_conntrack_ipv4 > /etc/modules-load.d/k8s.conf"
             
         master.vm.provision "shell",
           inline: "apt-get update && \
@@ -16,19 +16,6 @@ Vagrant.configure("2") do |config|
         master.vm.provision "shell",
           inline: "curl -fsSL https://get.docker.com | bash"
         
-        master.vm.provision "shell",
-          inline: "cat > /etc/docker/daemon.json <<EOF
-                    {
-                      "exec-opts": ["native.cgroupdriver=systemd"],
-                      "log-driver": "json-file",
-                      "log-opts": {
-                        "max-size": "100m"
-                      },
-                      "storage-driver": "overlay2"
-                    }
-                    EOF"
-          master.vm.provision "shell",
-            inline: "sudo mkdir -p /etc/systemd/system/docker.service.d && \
-                    systemctl daemon-reload && systemctl restart docker"                  
+
       end
   end
