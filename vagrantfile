@@ -1,47 +1,34 @@
 Vagrant.configure("2") do |config|
     config.vm.box = "ubuntu/focal64"
-    config.vm.provider "virtualbox" do |vb|
-        vb.memory = 2048
-        vb.cpus = 2
-        vb.gui = true
-    end 
-    config.vm.define "master" do |dk1|
-        dk1.vm.provider "virtualbox" do |vb| 
-            vb.name= "master"
-            vb.memory = 2048
-            vb.cpus = 2 
-        end
-        dk1.vm.network "private_network", ip: "192.168.1.21"
-        dk1.vm.network "forwarded_port", guest: 80, host: 8080, protocol: "tcp"
-        dk1.vm.provision "shell", inline: "apt-get update"
-        dk1.vm.provision "shell", inline: "apt-get install -y docker.io"
-        dk1.vm.provision "shell", inline: "usermod -aG docker vagrant"
-        dk1.vm.hostname = "master"
-    end
-    config.vm.define "node1" do |dk2|
-        dk2.vm.provider "virtualbox" do |vb| 
-            vb.name= "node2"
-            vb.memory = 2048
-            vb.cpus = 2 
-        end
-        dk2.vm.network "private_network", ip: "192.168.1.22"
-        dk2.vm.network "forwarded_port", guest: 80, host: 8080, protocol: "tcp"
-        dk2.vm.provision "shell", inline: "apt-get update"
-        dk2.vm.provision "shell", inline: "apt-get install -y docker.io"
-        dk2.vm.provision "shell", inline: "usermod -aG docker vagrant"
-        dk2.vm.hostname = "node2"
-    end
-    config.vm.define "node3" do |dk3|
-        dk3.vm.provider "virtualbox" do |vb| 
-            vb.name= "node3"
-            vb.memory = 2048
-            vb.cpus = 2 
-        end
-        dk3.vm.network "private_network", ip: "192.168.1.23"
-        dk3.vm.network "forwarded_port", guest: 80, host: 8080, protocol: "tcp"
-        dk3.vm.provision "shell", inline: "apt-get update"
-        dk3.vm.provision "shell", inline: "apt-get install -y docker.io"
-        dk3.vm.provision "shell", inline: "usermod -aG docker vagrant"
-        dk3.vm.hostname = "node3"
-    end
-end
+    config.vm.define "master" do |master|
+        master.vm.network "public_network", ip: "192.168.1.26"
+        master.vm.provision "shell",
+          inline: "echo "ip_vs 
+                  ip_vs_rr
+                  ip_vs_sh
+                  ip_vs_wrr
+                  nf_conntrack_ipv4" /etc/modules-load.d/k8s.conf"
+            
+        master.vm.provision "shell",
+          inline: "apt-get update && \
+                   sudo apt upgrade -y"
+    
+        master.vm.provision "shell",
+          inline: "curl -fsSL https://get.docker.com | bash"
+        
+        master.vm.provision "shell",
+          inline: "cat > /etc/docker/daemon.json <<EOF
+                    {
+                      "exec-opts": ["native.cgroupdriver=systemd"],
+                      "log-driver": "json-file",
+                      "log-opts": {
+                        "max-size": "100m"
+                      },
+                      "storage-driver": "overlay2"
+                    }
+                    EOF"
+          master.vm.provision "shell",
+            inline: "sudo mkdir -p /etc/systemd/system/docker.service.d && \
+                    systemctl daemon-reload && systemctl restart docker"                  
+      end
+  end
